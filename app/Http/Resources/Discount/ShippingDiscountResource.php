@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Http\Resources\Discount;
+
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class ShippingDiscountResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     */
+    public function toArray(Request $request)
+    {
+        return [
+            'id' => $this->id,
+            'minimum_price' => $this->minimum_price,
+            'max_shipping_discount' => $this->max_shipping_discount,
+            'start_date' => $this->start_date,
+            'end_date' => $this->end_date,
+            'status' => (Carbon::now() >= $this->start_date && Carbon::now() <= $this->end_date ) ? 'active' : 'not_active',
+        ];
+    }
+}
