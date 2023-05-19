@@ -15,7 +15,7 @@ class ProductVariantOptionController extends Controller
     {
         $request->validate([
             'product_id' => ['required', 
-            Rule::exists('pruducts', 'id')->where(function($query) {
+            Rule::exists('products', 'id')->where(function($query) {
                 return $query->whereNull('deleted_at');
             })
         ]

@@ -6,11 +6,13 @@ use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\User\UserResource;
 use App\Mail\SendActivationEmail;
+use App\Models\ActivationUserToken;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
@@ -38,7 +40,13 @@ class RegisterController extends Controller
             ]);
             $user->assignRole($role);
 
-            Mail::to($request->email)->send(new SendActivationEmail($user->name, $user->id));
+            $token = Str::random(64);
+            ActivationUserToken::create([
+                'user_id' => $user->id,
+                'token' => $token,
+            ]);
+
+            Mail::to($request->email)->send(new SendActivationEmail($user->name, $token));
             return ResponseFormatter::success(
                 new UserResource($user),
                 'check email to verify your account'

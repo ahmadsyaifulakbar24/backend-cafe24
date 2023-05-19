@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\User\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class GetUserController extends Controller
@@ -20,7 +21,19 @@ class GetUserController extends Controller
         ]);
         $limit = $request->input('limit', 10);
 
-        $user = User::query();
+        $auth_user = Auth::user();
+        $roles = [
+            'super admin',
+            'admin', 
+            'finance',
+            'distributor', 
+            'reseller',
+            'member',
+            'customer'
+        ];
+
+        $user = User::role($roles)->where('id', '!=', $auth_user->id);
+        
         if($request->status) {
             $user->where('status', $request->status);
         }

@@ -35,8 +35,8 @@
 <body>
     <div class="container">
         <p>Hi {!! $name !!}</p>
-        <p>Thank you for creating a Zenitha account. For your security, please verify your account.</p>
-        <a href="{{ route('email_verification', ['user_id' => $id]) }}">
+        <p>Thank you for creating an account. For your security, please verify your account.</p>
+        <a href="{{ route('email_verification', ['token' => $token]) }}">
             <button class="button-send-mail">Verify My Account</button>
         </a>
     </div>

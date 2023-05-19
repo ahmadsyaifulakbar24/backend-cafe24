@@ -35,15 +35,12 @@
 <body>
     <div class="container">
         <div class="alert">
+            @if (!empty($error))
+                {{ $error }}
+            @else
             <p>Hi {!! $user->name !!}</p>
-            <p>
-                Thank you for creating a Zenitha account. 
-                @if (!empty($error))
-                    {{ $error }}
-                @else
-                    Your account is already active please login
-                @endif 
-            </p>
+            <p>  Thank you for creating an account. Your account is already active please login </p>
+            @endif 
         </div>
     </div>
 </body>

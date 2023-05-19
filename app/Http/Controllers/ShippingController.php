@@ -18,7 +18,8 @@ class ShippingController extends Controller
             'courier' => ['string']
         ]);
 
-        $response = Http::withHeaders([
+        $response = Http::withoutVerifying()
+        ->withHeaders([
             'key' => env("RAJAONGKIR_KEY")
         ])
         ->post(env('RAJAONGKIR_URL') . 'cost', [
@@ -40,7 +41,8 @@ class ShippingController extends Controller
             'courier' => ['required', 'string'],
         ]);
 
-        $response = Http::withHeaders([
+        $response = Http::withoutVerifying()
+        ->withHeaders([
             'key' => env("RAJAONGKIR_KEY")
         ])
         ->post(env('RAJAONGKIR_URL') . 'waybill', [
