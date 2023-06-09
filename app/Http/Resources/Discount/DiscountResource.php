@@ -4,7 +4,6 @@ namespace App\Http\Resources\Discount;
 
 use App\Http\Resources\MasterData\CategoryResource;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class DiscountResource extends JsonResource
@@ -15,7 +14,7 @@ class DiscountResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public function toArray(Request $request)
+    public function toArray($request)
     {
         return [
             'id' => $this->id,

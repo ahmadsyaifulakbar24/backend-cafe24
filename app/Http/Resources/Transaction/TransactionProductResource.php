@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Transaction;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TransactionProductResource extends JsonResource
@@ -13,7 +12,7 @@ class TransactionProductResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public function toArray(Request $request)
+    public function toArray($request)
     {
         return [
             'id' => $this->id,
@@ -24,6 +23,7 @@ class TransactionProductResource extends JsonResource
             'discount_customer' => $this->discount_customer,
             'discount_product' => $this->discount_product,
             'price' => $this->price,
+            'new_price' => $this->new_price,
             'description' => $this->description,
             'quantity' => $this->quantity,
             'notes' => $this->notes,

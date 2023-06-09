@@ -24,6 +24,7 @@ class CreatePaymentsTable extends Migration
             $table->dateTime('paid_off_time')->nullable();
             $table->integer('order_payment');
             $table->enum('status', ['pending', 'process', 'paid_off', 'expired', 'canceled']);
+            $table->json('mootapay_response')->nullable();
             $table->timestamps();
         });
     }

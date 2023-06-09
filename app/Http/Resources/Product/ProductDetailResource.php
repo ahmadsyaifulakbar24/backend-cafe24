@@ -3,7 +3,6 @@
 namespace App\Http\Resources\Product;
 
 use App\Models\Discount;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,7 +14,7 @@ class ProductDetailResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public function toArray(Request $request)
+    public function toArray($request)
     {
         return [
             'id' => $this->id,

@@ -21,6 +21,11 @@ class Payment extends Model
         'paid_off_time',
         'order_payment',
         'status',
+        'mootapay_response',
+    ];
+
+    protected $casts = [
+        'mootapay_response' => 'array'
     ];
 
     public function getCreatedAtAttribute($date) {

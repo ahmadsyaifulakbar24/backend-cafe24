@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -23,8 +24,10 @@ class Banner extends Model
         'banner_url'
     ];
 
-    public function getBannerUrlAttribute()
+    public function bannerUrl(): Attribute
     {
-        return url('') . Storage::url($this->attributes['banner']);
+        return Attribute::make(
+            get: fn ($value) => url('') . Storage::url($this->attributes['banner']),
+        );
     }
 }

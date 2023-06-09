@@ -3,7 +3,6 @@
 namespace App\Http\Resources\ProductSlider;
 
 use App\Http\Resources\Product\ProductResource;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProductSliderResource extends JsonResource
@@ -14,7 +13,7 @@ class ProductSliderResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public function toArray(Request $request)
+    public function toArray($request)
     {
         return [
             'id' => $this->id,

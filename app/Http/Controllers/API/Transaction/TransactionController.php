@@ -12,9 +12,13 @@ use App\Models\Cart;
 use App\Models\Payment;
 use App\Models\ProductCombination;
 use App\Models\Transaction;
+use App\Models\User;
+use App\Repositories\MootapayRepository;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
@@ -118,8 +122,8 @@ class TransactionController extends Controller
                 'file'
             ],
             'transaction.*.payment_method' => ['required', 'in:cod,transfer,po'],
+            'transaction.*.shipping_discount' => ['required', 'integer'],
             'transaction.*.shipping_cost' => ['required', 'integer'],
-            'shipping_discount' => ['required', 'integer'],
             'address' => ['required', 'string'],
             'transaction.*.expedition' => ['required', 'string'],
             'transaction.*.transaction_product' => ['required', 'array'],
@@ -135,6 +139,7 @@ class TransactionController extends Controller
             'transaction.*.transaction_product.*.discount_group' => ['required', 'integer'],
             'transaction.*.transaction_product.*.discount_customer' => ['required', 'integer'],
             'transaction.*.transaction_product.*.price' => ['required', 'integer'],
+            'transaction.*.transaction_product.*.new_price' => ['required', 'integer'],
             'transaction.*.transaction_product.*.description' => ['required', 'string'],
             'transaction.*.transaction_product.*.quantity' => ['required', 'integer'],
             'transaction.*.transaction_product.*.notes' => ['nullable', 'string'],
@@ -155,21 +160,26 @@ class TransactionController extends Controller
                 $bank_required, 
                 'string'
             ],
+            'payment_method_id' => [
+                $bank_required, 
+                'string'
+            ],
         ]);
+        
 
         $result = DB::transaction(function () use ($request, $payment_methods) {
-            
             $new_request = $request->except(['marketplace_resi']);
             if($request->type == 'marketplace') {
                 $marketplace_resi = FileHelpers::upload_file('resi', $request->marketplace_resi);
             }
     
-            $date = Carbon::now();
-            $unique_code = rand(0,env("MAX_UNIQUE_CODE"));
+            $expired_date = Carbon::now()->addHour(24);
+            $unique_code = rand(1,env("MAX_UNIQUE_CODE"));
+            $new_unique_code = $request->no_rek != 'escrow' ? $unique_code : 0;
             
             // create payment total table
             if(in_array('transfer', $payment_methods) || in_array('po', $payment_methods)) {
-                $expired_time = $date->modify("+24 hours"); 
+                $expired_time = $expired_date; 
                 $status = 'process';
                 $status_transaction = 'pending';
             } else {
@@ -179,21 +189,25 @@ class TransactionController extends Controller
             }
             $input_payment = [
                 'user_id' => $request->user_id,
-                'unique_code' => $unique_code,
-                'total' => $request->total_price + $unique_code,
+                'unique_code' => $new_unique_code,
+                'total' => $request->total_price + $new_unique_code,
                 'expired_time' => $expired_time,
                 'order_payment' => 0,
                 'status' => $status,
             ];
             $all_payment = Payment::create($input_payment);
             // end create payment total table
-
+    
+            $mootapay_items = [];
+            $total_all_shipping = 0;
             foreach($new_request['transaction'] as $transaction_data) {
                 // create transaction table
+                $new_shipping = $transaction_data['shipping_cost'] - $transaction_data['shipping_discount'];
+                $total_all_shipping += $new_shipping;
+    
                 $input = $transaction_data;
                 $input['user_id'] = $request->user_id;
                 $input['type'] = $request->type;
-                $input['shipping_discount'] = $request->shipping_discount;
                 $input['address'] = $request->address;
                 $input['bank_name'] = $request->bank_name;
                 $input['no_rek'] = $request->no_rek;
@@ -236,7 +250,7 @@ class TransactionController extends Controller
                                 'user_id' => $request->user_id,
                                 'parent_id' => $all_payment->id,
                                 'total' => $request->total_price,
-                                'expired_time' => ($input['payment_method'] == 'cod') ? null : $date->modify("+24 hours"),
+                                'expired_time' => ($input['payment_method'] == 'cod') ? null : $expired_time,
                                 'order_payment' => 1,
                                 'status' => $status,
                             ]
@@ -250,7 +264,6 @@ class TransactionController extends Controller
                     $product_combination = ProductCombination::where('product_slug', $transaction_product['product_slug'])->first();
                     $product_combination->update([
                         'stock' => $product_combination->stock - $transaction_product['quantity']
-                        // 'stock' => 10
                     ]);
                     $product_slugs[] = $transaction_product['product_slug'];
                 }
@@ -259,8 +272,50 @@ class TransactionController extends Controller
                 // delete cart after success checkout
                 Cart::where('user_id', $request->user_id)->whereIn('product_slug', $product_slugs)->delete();
                 // end delete cart after success checkout
+    
+                // mootapay item
+                if($input['payment_method'] != 'cod' ) {
+                    foreach ($input['transaction_product'] as $transaction_product) {
+                        $mootapay_items[] = [
+                            'name' => $transaction_product['product_name'],
+                            'qty' => $transaction_product['quantity'],
+                            'price' => $transaction_product['new_price'],
+                            'sku' => $transaction_product['product_slug'],
+                            'image_url' => $transaction_product['image']
+                        ];
+                    }
+                }
             }
+            $mootapay_items[] = [
+                'name' => 'Ongkos Kirim',
+                'qty' => 1,
+                'price' => $total_all_shipping,
+                'sku' => 'ongkos-kirim',
+                'image_url' => asset('assets/images/deliver.png'),
+            ];
+    
+            // mootapay data
+            if(in_array('transfer', $payment_methods) || in_array('po', $payment_methods)) {
+                $customer = User::find($request->user_id);
+                $mootapay_data = [
+                    'invoice_number' => $all_payment->id,
+                    'amount' => $request->total_price,
+                    'payment_method_id' => $request->payment_method_id,
+                    'expired_date' => $expired_time,
+                    'customer' => [
+                        'name' => $customer->name,
+                        'email' => $customer->email,
+                        'phone' => '0' . $customer->phone_number,
+                    ],
+                    'items' => $mootapay_items,
+                    'unique_code' => $new_unique_code,
+                ];
+                
+                $this->moota_transaction($mootapay_data, $all_payment);
+            }
+    
             return ResponseFormatter::success(new PaymentResource($all_payment), 'success create transaction data');
+            
         });
         return $result;
     }
@@ -290,67 +345,69 @@ class TransactionController extends Controller
         return ResponseFormatter::success(new TransactionDetailResource($transaction), 'success update number resi transaction data');
     }
 
-    public function handle_moota(Request $request) {
-        $secret = env('MOOTA_WEBHOOK');
-        $moota_signature = $request->header('Signature');
+    public function handle_mootapay(Request $request) {
+        $secret = MootapayRepository::getToken();
+        $mootapay_signature = $request->header('Signature');
         $data = $request->json()->all();
-        $data2 = json_decode($request->getContent());
-        $data_string = json_encode($data2);
-        $signature = hash_hmac('sha256', $data_string, $secret);
-        
-        Log::info($data);
-        // Log::info($signature);
-        // Log::info($moota_signature);
+        $data2 = $request->getContent();
+        $signature = hash_hmac('sha256', $data2, $secret);
 
-        if($signature == $moota_signature) {
+        Log::info($data);
+        Log::info($signature);
+        Log::info($mootapay_signature);
+
+        if($signature == $mootapay_signature) {
             if($data) {
-                foreach ($data as $res) {
-                    // get payment
-                    $payment = Payment::where([['status', 'process'], ['total', $res['amount'], ['expired_time', '>=' , $res['date']]]])->whereNotNull('unique_code')->first();
+                // get payment
+                $payment = Payment::where([
+                    ['status', 'process'], 
+                    ['expired_time', '>=' , Carbon::now()]
+                ])
+                ->whereJsonContains('mootapay_response->data->trx_id', $data['trx_id'])
+                ->whereNotNull('unique_code')->first();
     
-                    if(!empty($payment)) {
-                        $result = DB::transaction(function () use ($payment) {
-                            // update payment status from moota
-                            $payment->update([
+                if(!empty($payment)) {
+                    $result = DB::transaction(function () use ($payment) {
+                        // update payment status from moota
+                        $payment->update([
+                            'status' => 'paid_off',
+                            'paid_off_time' => Carbon::now()
+                        ]);
+                        if($payment->order_payment == 0) {
+                            Payment::where([['parent_id', $payment->id], ['order_payment', 1]])->update([
                                 'status' => 'paid_off',
                                 'paid_off_time' => Carbon::now()
                             ]);
-                            if($payment->order_payment == 0) {
-                                Payment::where([['parent_id', $payment->id], ['order_payment', 1]])->update([
+                            $transaction_ids = Payment::where('parent_id', $payment->id)->distinct()->pluck('transaction_id')->toArray();
+                        } else {
+                            $transaction_ids = [$payment->transaction_id];
+                        }
+    
+                        // cek payment if all paid off
+                        foreach($transaction_ids as $transaction_id) {
+                            $cek_payment = Payment::where([
+                                ['transaction_id', $transaction_id],
+                                ['status', '!=', 'paid_off']
+                            ])->count();
+        
+                            if($cek_payment == 0) {
+                                Transaction::find($transaction_id)->update([
                                     'status' => 'paid_off',
                                     'paid_off_time' => Carbon::now()
                                 ]);
-                                $transaction_ids = Payment::where('parent_id', $payment->id)->distinct()->pluck('transaction_id')->toArray();
-                            } else {
-                                $transaction_ids = [$payment->transaction_id];
                             }
-        
-                            // cek payment if all paid off
-                            foreach($transaction_ids as $transaction_id) {
-                                $cek_payment = Payment::where([
-                                    ['transaction_id', $transaction_id],
-                                    ['status', '!=', 'paid_off']
-                                ])->count();
-            
-                                if($cek_payment == 0) {
-                                    Transaction::find($transaction_id)->update([
-                                        'status' => 'paid_off',
-                                        'paid_off_time' => Carbon::now()
-                                    ]);
-                                }
-                            }
-                            // end cek payment if all paid of
+                        }
+                        // end cek payment if all paid of
     
-                            Log::notice("success update status payment data");
-                            return ResponseFormatter::success(null, "success update status payment data");
-                        });
-                        return $result;
-                    } else {
-                        Log::error("failed update status payment data");
-                        return ResponseFormatter::error([
-                            'message' => 'failed update status payment data'
-                        ], 'update payment failed', 422);
-                    }
+                        Log::notice("success update status payment data");
+                        return ResponseFormatter::success(null, "success update status payment data");
+                    });
+                    return $result;
+                } else {
+                    Log::error("failed update status payment data");
+                    return ResponseFormatter::error([
+                        'message' => 'failed update status payment data'
+                    ], 'update payment failed', 422);
                 }
             }
         } else {
@@ -391,5 +448,36 @@ class TransactionController extends Controller
             // 'finish' => $query_fi->where('status', 'finish')->count(),
         ];
         return ResponseFormatter::success($result, 'success get notification data');
+    }
+
+    public function moota_transaction($data, Payment $payment) 
+    {
+        $input = [
+            'invoice_number' => $data['invoice_number'],
+            'merchant_id' => env("MOOTAPAY_MERCHANT_ID"),
+            'amount' => $data['amount'],
+            'payment_method_id' => $data['payment_method_id'],
+            'type' => 'payment',
+            'callback_url' => url('') . '/api/transaction/handle_mootapay',
+            // 'expired_date' => Carbon::parse($data['expired_date'])->format('Y-m-d H:i:00'),
+            'customer' => [
+                'name' => $data['customer']['name'],
+                'email' => $data['customer']['email'],
+                'phone' => $data['customer']['phone'],
+            ],
+            'items' => $data['items'],
+            'unique_code' => $data['unique_code'],
+        ];
+
+        $response = MootapayRepository::transaction($input);
+
+        if($response->successful()) {
+            $payment->update([
+                'mootapay_response' => json_decode($response),
+                'expired_time' => Carbon::parse($response['data']['expired_date'])
+            ]);
+        } else {
+            $response->throw();
+        }
     }
 }

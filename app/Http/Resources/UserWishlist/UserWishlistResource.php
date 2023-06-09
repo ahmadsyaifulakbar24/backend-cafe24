@@ -4,7 +4,6 @@ namespace App\Http\Resources\UserWishlist;
 
 use App\Http\Resources\Product\ProductResource;
 use App\Http\Resources\User\UserResource;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserWishlistResource extends JsonResource
@@ -15,7 +14,7 @@ class UserWishlistResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public function toArray(Request $request)
+    public function toArray($request)
     {
         return [
             'id' => $this->id,

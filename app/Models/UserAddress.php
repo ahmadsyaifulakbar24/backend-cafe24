@@ -21,7 +21,8 @@ class UserAddress extends Model
         'district_id',
         'postal_code',
         'address',
-        'type'
+        'type',
+        'main'
     ];
 
     public function getCreatedAtAttribute($date) {

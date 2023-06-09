@@ -7,7 +7,6 @@ use App\Http\Resources\MasterData\SubCategoryResource;
 use App\Models\Discount;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProductCombinationResource extends JsonResource
@@ -18,7 +17,7 @@ class ProductCombinationResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public function toArray(Request $request)
+    public function toArray($request)
     {
         $discount_group_data = null;
         $discount_user_data = null;

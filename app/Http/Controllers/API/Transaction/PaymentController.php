@@ -8,10 +8,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Transaction\PaymentResource;
 use App\Models\Payment;
 use App\Models\Transaction;
+use App\Repositories\MootapayRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PhpParser\Node\Expr\FuncCall;
 
 class PaymentController extends Controller
 {
@@ -85,29 +85,79 @@ class PaymentController extends Controller
                 }
                 // end check payemnt if all paid off
             }
+    
+            // canceled moota transaction
+            if($request->status == 'canceled') {
+                $mootapay_trx_id = $payment->mootapay_response['data']['trx_id'];
+                MootapayRepository::transaction_canceled($mootapay_trx_id);
+            }
         });
         
         return ResponseFormatter::success(new PaymentResource($payment), 'success update payment status data');
     }
 
-    public function triger_payement_po(Payment $payment)
+    public function triger_payement_po(Request $request, Payment $payment)
     {
+        $request->validate([
+            'payment_method_id' => ['required', 'string'],
+        ]);
+        
         // if($payment->transaction->payment_method == 'po') {
 
         // }        
         if($payment->status == 'pending') {
-            $unique_code = rand(0,env("MAX_UNIQUE_CODE"));
-            $date = Carbon::now();
-            $expired_time = $date->modify("+24 hours");
+            $result = DB::transaction(function () use ($request, $payment) {
+
+                $unique_code = rand(0,env("MAX_UNIQUE_CODE"));
+                $expired_time = Carbon::now()->addHour(24);
+        
+                // update to payment
+                $payment->update([
+                    'unique_code' => $unique_code,
+                    'expired_time' => $expired_time,
+                    'total' => $payment->total + $unique_code,
+                    'status' => 'process'
+                ]);
     
-            $payment->update([
-                'unique_code' => $unique_code,
-                'expired_time' => $expired_time,
-                'total' => $payment->total + $unique_code,
-                'status' => 'process'
-            ]);
+                // send transaction to mootapay
+                $mootapay_data = [
+                    'invoice_number' => $payment->id,
+                    'amount' => $payment->total,
+                    'payment_method_id' => $request->payment_method_id,
+                    'expired_date' => $expired_time,
+                    'customer' => [
+                        'name' => $payment->transaction->user->name,
+                        'email' =>$payment->transaction->user->email,
+                        'phone' => '0' . $payment->transaction->user->phone_number,
+                    ],
+                    'items' => [
+                        [
+                            'name' => 'po payment',
+                            'qty' => 1,
+                            'price' => $payment->total,
+                            'sku' => 'po-payment',
+                            'image_url' => asset('assets/images/preorder.png'),
+                        ]
+                    ],
+                    'unique_code' => $unique_code,
+                ];
+        
+                $response = MootapayRepository::transaction($mootapay_data);
     
-            return ResponseFormatter::success(new PaymentResource($payment), 'success triger second payment po data');
+                // insert response mootapay to payment table
+                if($response->successful()) {
+                    $payment->update([
+                        'mootapay_response' => json_decode($response),
+                        'expired_time' => Carbon::parse($response['data']['expired_date'])
+                    ]);
+                } else {
+                    $response->throw();
+                }
+    
+                return ResponseFormatter::success(new PaymentResource($payment), 'success triger second payment po data');
+            });
+
+            return $result;
         } else {
             return ResponseFormatter::error([
                 'message' => 'error triger second payment po data'

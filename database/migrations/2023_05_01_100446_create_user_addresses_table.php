@@ -25,6 +25,7 @@ class CreateUserAddressesTable extends Migration
             $table->integer('postal_code');
             $table->string('address');
             $table->enum('type', ['receiver', 'alone']);
+            $table->boolean('main')->default(1);
             $table->timestamps();
         });
     }

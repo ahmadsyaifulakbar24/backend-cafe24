@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\User\UserAddressResource;
 use App\Models\User;
 use App\Models\UserAddress;
+use Facade\FlareClient\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -45,6 +46,11 @@ class UserAddressController extends Controller
         $input = $request->all();
 
         $user = User::find($request->user_id);
+        $check_main_address = $user->user_address()->where('main', '1')->count();
+        if($check_main_address > 0) {
+            $input['main'] = 0;
+        }
+
         $user_address = $user->user_address()->create($input); 
 
         return ResponseFormatter::success(
@@ -74,6 +80,23 @@ class UserAddressController extends Controller
             $this->message('get')
         );
     } 
+
+    public function update_main_address(UserAddress $user_address)
+    {
+        if(!empty($user_address)) {
+            $user = $user_address->user;
+
+            $user_address->update(['main' => 1]);
+
+            $user->user_address()->where('id', '!=', $user_address->id)->update(['main' => 0]);
+
+            return ResponseFormatter::success(new UserAddressResource($user_address), 'success update main address data');
+        } else {
+            return ResponseFormatter::error([
+                'user_address_id' => 'invalid user address id'
+            ], 'update main address failed', 422);
+        }
+    }
 
     public function update(Request $request, UserAddress $user_address) {
         $request->validate([

@@ -27,6 +27,10 @@ use App\Http\Controllers\API\Product\GetProductController;
 use App\Http\Controllers\API\Product\ProductVariantOptionController;
 use App\Http\Controllers\API\Product\UpdateProductController;
 use App\Http\Controllers\API\ProductSlider\ProductSliderController;
+use App\Http\Controllers\API\Promotion\CreatePromotionController;
+use App\Http\Controllers\API\Promotion\DeletePromotionController;
+use App\Http\Controllers\API\Promotion\GetPromotionController;
+use App\Http\Controllers\API\Promotion\UpdatePromotionController;
 use App\Http\Controllers\API\Region\RegionController;
 use App\Http\Controllers\API\Report\ReportController;
 use App\Http\Controllers\API\Role\RoleController;
@@ -215,6 +219,7 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/fetch', [UserAddressController::class, 'fetch']);
             Route::get('/show/{user_address:id}', [UserAddressController::class, 'show']);
             Route::put('/update/{user_address:id}', [UserAddressController::class, 'update']);
+            Route::patch('/update_main_address/{user_address:id}', [UserAddressController::class, 'update_main_address']);
             Route::delete('/delete/{user_address:id}', [UserAddressController::class, 'delete']);
         });
     });
@@ -311,6 +316,14 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('activity_transaction', [ReportController::class, 'activity_transaction']);
         Route::get('turnover', [ReportController::class, 'turnover']);
         Route::get('sales', [ReportController::class, 'sales']);
+    });
+
+    Route::prefix('promotion')->group(function() {
+        Route::get('/fetch', [GetPromotionController::class, 'fetch']);
+        Route::post('/create', CreatePromotionController::class);
+        Route::get('/show/{promotion:id}', [GetPromotionController::class, 'show']);
+        Route::patch('/update/{promotion:id}', UpdatePromotionController::class);
+        Route::delete('/delete/{promotion:id}', DeletePromotionController::class);
     });
 });
 // end with auth

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\WebSetting;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class FooterBannerResource extends JsonResource
@@ -13,7 +12,7 @@ class FooterBannerResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public function toArray(Request $request)
+    public function toArray($request)
     {
         return [
             'id' => $this->id,

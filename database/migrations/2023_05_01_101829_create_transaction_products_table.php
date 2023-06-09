@@ -23,6 +23,7 @@ class CreateTransactionProductsTable extends Migration
             $table->bigInteger('discount_customer');
             $table->bigInteger('discount_product');
             $table->bigInteger('price');
+            $table->bigInteger('new_price');
             $table->string('description');
             $table->integer('quantity');
             $table->string('notes')->nullable(); 

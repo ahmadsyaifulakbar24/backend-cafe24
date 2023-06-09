@@ -7,7 +7,6 @@ use App\Models\Discount;
 use App\Models\ProductCombination;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProductResource extends JsonResource
@@ -20,7 +19,7 @@ class ProductResource extends JsonResource
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
     
-    public function toArray(Request $request)
+    public function toArray($request)
     {
         $main_product = ProductCombination::where([['product_id', $this->id], ['main', 1]])->first();
         

@@ -19,6 +19,7 @@ class TransactionProduct extends Model
         'discount_group',
         'discount_customer',
         'price',
+        'new_price',
         'description',
         'quantity',
         'notes'

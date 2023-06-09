@@ -4,7 +4,6 @@ namespace App\Http\Resources\Transaction;
 
 use App\Models\Payment;
 use App\Models\Transaction;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PaymentResource extends JsonResource
@@ -15,7 +14,7 @@ class PaymentResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public function toArray(Request $request)
+    public function toArray($request)
     {
         if($this->transaction_id == null) {
             $transaction_id = Payment::where('parent_id', $this->id)->first()->transaction_id;
@@ -45,6 +44,7 @@ class PaymentResource extends JsonResource
             'status' => $this->status,
             'evidence' => new EvidenceResource($this->evidence),
             'transaction_with_product' => $transaction_with_product,
+            'mootapay_response' => $this->mootapay_response,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -48,8 +48,8 @@ class BannerController extends Controller
         ]);
 
         $input = $request->all();
-        if($request->banner) {
-            $path = FileHelpers::upload_file('banner', $request->banner);
+        if($request->file('banner')) {
+            $path = FileHelpers::upload_file('banner', $request->file('banner'));
             $input['banner'] = $path;
             Storage::disk('public')->delete($banner->banner);
         }
