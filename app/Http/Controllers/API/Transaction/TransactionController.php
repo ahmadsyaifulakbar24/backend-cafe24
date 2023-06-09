@@ -226,24 +226,37 @@ class TransactionController extends Controller
                 // end create transaction product table
     
                 // create payment table
+                    $po_payment = env('PO_PAYMENT');
                     if($input['payment_method'] == 'po') {
-                        $po1 = $input['sub_total'] * env('PO_PAYMENT') / 100;
-                        $input_payment = [
-                            [
-                                'user_id' => $request->user_id,
-                                'parent_id' => $all_payment->id,
-                                'total' => $po1,
-                                'order_payment' => 1,
-                                'status' => $status,
-                            ],
-                            [
-                                'user_id' => $request->user_id,
-                                'parent_id' => $all_payment->id,
-                                'total' => $input['sub_total'] - $po1,
-                                'order_payment' => 2,
-                                'status' => 'pending',
-                            ],
-                        ];
+                        $po1 = $input['sub_total'] * $po_payment / 100;
+                        if($po_payment < 100) {
+                            $input_payment = [
+                                [
+                                    'user_id' => $request->user_id,
+                                    'parent_id' => $all_payment->id,
+                                    'total' => $po1,
+                                    'order_payment' => 1,
+                                    'status' => $status,
+                                ],
+                                [
+                                    'user_id' => $request->user_id,
+                                    'parent_id' => $all_payment->id,
+                                    'total' => $input['sub_total'] - $po1,
+                                    'order_payment' => 2,
+                                    'status' => 'pending',
+                                ],
+                            ];
+                        } else {
+                            $input_payment = [
+                                [
+                                    'user_id' => $request->user_id,
+                                    'parent_id' => $all_payment->id,
+                                    'total' => $po1,
+                                    'order_payment' => 1,
+                                    'status' => $status,
+                                ],
+                            ];
+                        }
                     } else {
                         $input_payment = [
                             [
