@@ -36,7 +36,7 @@ class VariantOptionController extends Controller
             'variant_id' => ['nullable', 'exists:variants,id']
         ]);
 
-        $variant_option = VariantOption::query();
+        $variant_option = VariantOption::orderBy('id', 'desc');
         if ($request->variant_id) {
             $variant_option->where('variant_id', $request->variant_id);
         }
@@ -59,7 +59,7 @@ class VariantOptionController extends Controller
     {
         if($variant_option->default == 1) {
             return ResponseFormatter::errorValidation([
-                'variant_id' => 'variant options id is invalid'
+                'variant_option_id' => 'variant options id is invalid'
             ], 'update variant option failed');
         }
 
