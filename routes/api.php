@@ -310,6 +310,7 @@ Route::middleware(['auth:api'])->group(function () {
 
     Route::prefix('moota')->group(function() {
         Route::get('bank', [MootaController::class, 'bank']);
+        Route::get('payment_method', [MootaController::class, 'list_payment_method']);
     });
 
     Route::prefix('report')->group(function(){
