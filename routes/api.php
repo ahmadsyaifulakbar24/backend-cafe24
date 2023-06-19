@@ -134,6 +134,11 @@ Route::prefix('article')->group(function() {
 Route::prefix('product_slider')->group(function() {
     Route::get('fetch', [ProductSliderController::class, 'get']);
 });
+
+Route::prefix('promotion')->group(function() {
+    Route::get('/fetch', [GetPromotionController::class, 'fetch']);
+    Route::get('/show/{promotion:id}', [GetPromotionController::class, 'show']);
+});
 // end without auth
 
 
@@ -320,9 +325,7 @@ Route::middleware(['auth:api'])->group(function () {
     });
 
     Route::prefix('promotion')->group(function() {
-        Route::get('/fetch', [GetPromotionController::class, 'fetch']);
         Route::post('/create', CreatePromotionController::class);
-        Route::get('/show/{promotion:id}', [GetPromotionController::class, 'show']);
         Route::patch('/update/{promotion:id}', UpdatePromotionController::class);
         Route::delete('/delete/{promotion:id}', DeletePromotionController::class);
     });
