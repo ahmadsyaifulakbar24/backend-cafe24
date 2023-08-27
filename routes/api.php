@@ -268,6 +268,10 @@ Route::middleware(['auth:api'])->group(function () {
         Route::patch('/update_resi/{transaction:id}', [TransactionController::class, 'update_resi']);
         Route::get('/notification', [TransactionController::class, 'notification']);
 
+        Route::post('/delivery_order_pdf/{transaction:id}', [TransactionController::class, 'delivery_order_pdf']);
+        Route::post('/invoice_pdf/{transaction:id}', [TransactionController::class, 'invoice_pdf']);
+
+
         Route::prefix('payment')->group(function() {
             Route::get('/', [PaymentController::class, 'get']);
             Route::get('/total', [PaymentController::class, 'count']);
