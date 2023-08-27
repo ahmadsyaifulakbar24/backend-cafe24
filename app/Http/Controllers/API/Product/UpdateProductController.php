@@ -58,6 +58,10 @@ class UpdateProductController extends Controller
                 Rule::requiredIf(!empty($request->size_unit)),
                 'integer'
             ],
+            'width' => [
+                Rule::requiredIf(!empty($request->size_unit)),
+                'integer'
+            ],
             'size_guide' => ['nullable', 'string'],
             'active_discount' => ['required', 'in:0,1'],
             'discount_type' => [

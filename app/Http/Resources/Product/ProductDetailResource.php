@@ -32,6 +32,7 @@ class ProductDetailResource extends JsonResource
             'size_unit' => $this->size_unit,
             'height' => $this->height,
             'length' => $this->length,
+            'width' => $this->width,
             'rate' => $this->rate,
             'size_guide' => $this->size_guide,
             'active_discount' => !empty($this->discount_type) ? 1 : 0,
