@@ -24,6 +24,7 @@ use App\Http\Controllers\API\Moota\MootaController;
 use App\Http\Controllers\API\Product\CreateProductController;
 use App\Http\Controllers\API\Product\DeleteProductController;
 use App\Http\Controllers\API\Product\GetProductController;
+use App\Http\Controllers\API\Product\ProductExcelController;
 use App\Http\Controllers\API\Product\ProductVariantOptionController;
 use App\Http\Controllers\API\Product\UpdateProductController;
 use App\Http\Controllers\API\ProductSlider\ProductSliderController;
@@ -92,6 +93,9 @@ Route::prefix('product')->group(function() {
     Route::get('product_combination', [GetProductController::class, 'product_combination']);
     Route::get('product_combination_by_slug/{product_combination:product_slug}', [GetProductController::class, 'product_combination_slug']);
     Route::get('variant_option', [ProductVariantOptionController::class, 'get_product_variant_option']);
+
+    Route::get('product_combination_excel', [ProductExcelController::class, 'product_combination_excel']);
+    Route::post('product_combination_import', [ProductExcelController::class, 'product_combination_import']);
 });
 
 Route::prefix('banner')->group(function() {
