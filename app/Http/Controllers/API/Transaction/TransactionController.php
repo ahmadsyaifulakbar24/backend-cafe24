@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TransactionController extends Controller
 {
@@ -492,5 +493,27 @@ class TransactionController extends Controller
         } else {
             $response->throw();
         }
+    }
+
+    public function delivery_order_pdf(Transaction $transaction) 
+    {
+        $data = [
+            'test' => 'test'
+        ];
+
+        $pdf = Pdf::loadView('pdf.delivery_order', $data);
+        $file_name = 'delivery-order-.pdf';
+        return $pdf->download($file_name);
+    }
+
+    public function invoice_pdf(Transaction $transaction) 
+    {
+        $data = [
+            'test' => 'test'
+        ];
+
+        $pdf = Pdf::loadView('pdf.invoice_pdf', $data);
+        $file_name = 'invoice_pdf-.pdf';
+        return $pdf->download($file_name);
     }
 }
