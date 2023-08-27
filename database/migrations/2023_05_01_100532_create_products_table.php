@@ -29,6 +29,7 @@ class CreateProductsTable extends Migration
             $table->integer('product_weight');
             $table->enum('weight_unit', ['gram', 'kg']);
             $table->enum('size_unit', ['cm', 'm'])->nullable();
+            $table->integer('width')->nullable();
             $table->integer('height')->nullable();
             $table->integer('length')->nullable();
             $table->float('rate');

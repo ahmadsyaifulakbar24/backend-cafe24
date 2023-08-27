@@ -29,6 +29,7 @@ class Product extends Model
         'size_unit',
         'height',
         'length',
+        'width',
         'rate',
         'size_guide',
         'discount_type',
