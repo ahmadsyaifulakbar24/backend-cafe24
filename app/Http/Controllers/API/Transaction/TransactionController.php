@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\ProductCombination;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\WebSetting;
 use App\Repositories\MootapayRepository;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
@@ -497,8 +498,10 @@ class TransactionController extends Controller
 
     public function delivery_order_pdf(Transaction $transaction) 
     {
+        $setting = WebSetting::first();
         $data = [
-            'test' => 'test'
+            'transaction' => $transaction,
+            'setting' => $setting,
         ];
 
         $pdf = Pdf::loadView('pdf.delivery_order', $data);
@@ -508,8 +511,10 @@ class TransactionController extends Controller
 
     public function invoice_pdf(Transaction $transaction) 
     {
+        $setting = WebSetting::first();
         $data = [
-            'test' => 'test'
+            'transaction' => $transaction,
+            'setting' => $setting,
         ];
 
         $pdf = Pdf::loadView('pdf.invoice_pdf', $data);

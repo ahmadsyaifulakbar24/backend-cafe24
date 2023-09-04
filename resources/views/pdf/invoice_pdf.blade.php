@@ -76,31 +76,28 @@
 <body>
     <div>
         <div class="left">
-                <p style="font-size: 1.5rem;">Klinik Cafe24 Bandung</p>
+                <p style="font-size: 1.5rem;">{{ $setting->name }}</p>
                 <p style="font-size: 1.1rem; margin-top: -10px;">
-                    Jl. Tubagus Ismail Raya No. 1A<br>
-                    Sekeloa, Coblong, Kota Bandung<br>
-                    Jawa Barat, 40134<br>
-                    62818567894
+                    {{ $setting->address }} <br>
+                    {{ $setting->phone }}
                 </p>
         </div>
         <div class="right">
-                <p style="font-size: 1.1rem;">Tanggal: 21 Agustus 2023</p>
+                <p style="font-size: 1.1rem;">Tanggal: {{ \Carbon\Carbon::parse($transaction->created_at)->format('d F Y') }}</p>
                 <p style="font-size: 1.1rem; margin-top: -10px;">
                     Kepada Yth.
                 </p>
                 <div class="line"></div>
                 <p style="font-size: 1.2rem; font-weight: bold; margin-top: -10px;">Contoh</p>
                 <p style="font-size: 1.1rem; margin-top: -10px;">
-                    Jl. Bangreng No.9, Turangga, Kec. <br>
-                    Lengkong, Kota Bandung, Jawa Barat 40264 <br><br>
-                    082130518825
+                    {{ $transaction->address }} <br><br>
+                    0{{ $transaction->user->phone_number }}
                 </p>
                 <div class="line"></div>
         </div>
     </div>
     <div class="clearfix"></div>
-    <p style="font-size: 1.1rem;">No. Nota INV/KC24/230821-00240</p>
+    <p style="font-size: 1.1rem;">No. Nota INV/KC24/{{ \Carbon\Carbon::parse($transaction->created_at)->format('ymd') }}-{{ str_pad($transaction->invoice_number, 5, '0', STR_PAD_LEFT) }}</p>
     <table style="margin-bottom: 10px;">
         <tr>
             <th class="no">NO</th>
@@ -109,29 +106,32 @@
             <th class="harga">HARGA</th>
             <th>JUMLAH</th>
         </tr>
-        <tr>
-            <td class="no">1</td>
-            <td class="banyaknya">6</td>
-            <td class="nama-item">Denali Syrup:Caramel</td>
-            <td class="harga">105.000 <br> <span class="discount-text">disc 10%</span></td>
-            <td>630.000 <br> <span class="discount-text">(63.000)</span></td>
-        </tr>
-        <tr>
-            <td class="no">1</td>
-            <td class="banyaknya">6</td>
-            <td class="nama-item">Denali Syrup:Caramel</td>
-            <td class="harga">105.000 <br> <span class="discount-text">disc 10%</span></td>
-            <td>630.000 <br> <span class="discount-text">(63.000)</span></td>
-        </tr>
+        @php
+            $no = 1;
+            $total_price = 0;
+        @endphp
+        @foreach ( $transaction->transaction_product as $product)
+        @php
+            $price = $product->price * $product->quantity;
+            $total_price += $price;
+        @endphp
+            <tr>
+                <td class="no">{{ $no++ }}</td>
+                <td class="banyaknya">{{ $product->quantity }}</td>
+                <td class="nama-item">{{ $product->product_name }}</td>
+                <td class="harga">{{ $product->price }} <br> <span class="discount-text">disc 10%</span></td>
+                <td>{{ $price }} <br> <span class="discount-text">(63.000)</span></td>
+            </tr>
+        @endforeach
     </table>
     <div class="clearfix"></div>
-    <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">[Printed by e-Nota]</p>
+    {{-- <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">[Printed by e-Nota]</p> --}}
     <div>
         <div class="container-right">
             <span>
                 Total Harga
             </span>
-            <span class="value-right">1.740.000</span>
+            <span class="value-right">{{ $total_price }}</span>
         </div>
         <div class="clearfix"></div>
 
@@ -146,7 +146,7 @@
     <div style="margin-top: 10px;" class="line"></div>
     <div>
         <div class="left">
-            <p style="font-size: 1.1rem; margin-top: 0px; margin-bottom: 0px">Total qty: 12</p>
+            <p style="font-size: 1.1rem; margin-top: 0px; margin-bottom: 0px">Total qty: {{ $transaction->transaction_product()->sum('quantity') }}</p>
         </div>
         <div class="container-right">
             <span>SUB TOTAL</span>
@@ -188,8 +188,8 @@
     <div class="clearfix"></div>
     <div style="margin: 80px 0;"></div>
     <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">***Thank You***</p>
-    <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">21/08/2023 12:17:41</p>
+    <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">{{ \Carbon\Carbon::parse($transaction->created_at)->format('d/m/Y H:i:s') }}</p>
     <br>
-    <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">[BCA a/ Nasharudin 3720-0150-04]</p>
+    <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">[{{ $transaction->bank_name }} - {{ $transaction->no_rek }}]</p>
 </body>
 </html>
