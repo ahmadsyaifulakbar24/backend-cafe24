@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/midtrans-snap', function() {
-    $snapToken = "e3dfec9e-5e35-4f43-95b8-cc02747a3729";
-    return view('midtrans-test.snap.order', compact('snapToken'));
-});
+// Route::get('/midtrans-snap', function() {
+//     $snapToken = "781c99c8-ede9-49ba-a356-599b48d86bec";
+//     return view('midtrans-test.snap.order', compact('snapToken'));
+// });
 
 // Route Mail Activation
 Route::get('email_verification/{token}', [EmailVerificationController::class, 'email_verification'])->name('email_verification');
