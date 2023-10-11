@@ -44,7 +44,8 @@ class PaymentResource extends JsonResource
             'status' => $this->status,
             'evidence' => new EvidenceResource($this->evidence),
             'transaction_with_product' => $transaction_with_product,
-            'mootapay_response' => $this->mootapay_response,
+            'snap_token' => $this->snap_token,
+            'midtrans_notification' => $this->midtrans_notification,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

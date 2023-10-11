@@ -21,11 +21,12 @@ class Payment extends Model
         'paid_off_time',
         'order_payment',
         'status',
-        'mootapay_response',
+        'snap_token',
+        'midtrans_notification',
     ];
 
     protected $casts = [
-        'mootapay_response' => 'array'
+        'midtrans_notification' => 'array',
     ];
 
     public function getCreatedAtAttribute($date) {

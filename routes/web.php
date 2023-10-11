@@ -14,8 +14,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function() {
-    return view('welcome');
+Route::get('/midtrans-snap', function() {
+    $snapToken = "e3dfec9e-5e35-4f43-95b8-cc02747a3729";
+    return view('midtrans-test.snap.order', compact('snapToken'));
 });
 
 // Route Mail Activation

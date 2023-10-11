@@ -339,5 +339,7 @@ Route::middleware(['auth:api'])->group(function () {
     });
 });
 // end with auth
-Route::post('transaction/handle_moota', [TransactionController::class, 'handle_moota']);
+
+// Route::post('transaction/handle_moota', [TransactionController::class, 'handle_moota']);
+Route::post('transaction/handle_midtrans', [TransactionController::class, 'handle_midtrans']);
 

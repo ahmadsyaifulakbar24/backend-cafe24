@@ -8,7 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Transaction\PaymentResource;
 use App\Models\Payment;
 use App\Models\Transaction;
-use App\Repositories\MootapayRepository;
+use App\Services\Midtrans\CreateSnapTokenService;
+use App\Services\Midtrans\TransactionStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,12 +62,12 @@ class PaymentController extends Controller
             
             // check payemnt if all paid off
             if($payment->order_payment == 0) {
-                $transactioin_arr = $child->distinct()->pluck('transaction_id')->toArray();
+                $transaction_arr = $child->distinct()->pluck('transaction_id')->toArray();
             } else {
-                $transactioin_arr = [$payment->transaction_id];
+                $transaction_arr = [$payment->transaction_id];
             }
     
-            foreach($transactioin_arr as $transaction_id) {
+            foreach($transaction_arr as $transaction_id) {
                 $cek_payment = Payment::where([
                     ['transaction_id', $transaction_id],
                     ['status', '!=', 'paid_off']
@@ -86,29 +87,22 @@ class PaymentController extends Controller
                 // end check payemnt if all paid off
             }
     
-            // canceled moota transaction
-            if($request->status == 'canceled') {
-                $mootapay_trx_id = $payment->mootapay_response['data']['trx_id'];
-                MootapayRepository::transaction_canceled($mootapay_trx_id);
+            // canceled midtrans transaction
+            if($request->status == 'canceled' && !empty($payment->snap_token)) {
+                $midtrans_transaction = new TransactionStatus($payment->id);
+                $midtrans_transaction->cancel();
             }
         });
         
         return ResponseFormatter::success(new PaymentResource($payment), 'success update payment status data');
     }
 
-    public function triger_payement_po(Request $request, Payment $payment)
-    {
-        $request->validate([
-            'payment_method_id' => ['required', 'string'],
-        ]);
-        
-        // if($payment->transaction->payment_method == 'po') {
-
-        // }        
+    public function triger_payement_po(Payment $payment)
+    {   
         if($payment->status == 'pending') {
-            $result = DB::transaction(function () use ($request, $payment) {
+            $result = DB::transaction(function () use ($payment) {
 
-                $unique_code = rand(0,env("MAX_UNIQUE_CODE"));
+                $unique_code = 0;
                 $expired_time = Carbon::now()->addHour(24);
         
                 // update to payment
@@ -119,40 +113,20 @@ class PaymentController extends Controller
                     'status' => 'process'
                 ]);
     
-                // send transaction to mootapay
-                $mootapay_data = [
-                    'invoice_number' => $payment->id,
-                    'amount' => $payment->total,
-                    'payment_method_id' => $request->payment_method_id,
-                    'expired_date' => $expired_time,
-                    'customer' => [
-                        'name' => $payment->transaction->user->name,
+                // send transaction to midtrans
+                $order = [
+                    'order_id' => $payment->id,
+                    'gross_amount' => $payment->total,
+                    'customer_details' => [
+                        'first_name' => $payment->transaction->user->name,
                         'email' =>$payment->transaction->user->email,
                         'phone' => '0' . $payment->transaction->user->phone_number,
                     ],
-                    'items' => [
-                        [
-                            'name' => 'po payment',
-                            'qty' => 1,
-                            'price' => $payment->total,
-                            'sku' => 'po-payment',
-                            'image_url' => asset('assets/images/preorder.png'),
-                        ]
-                    ],
-                    'unique_code' => $unique_code,
                 ];
         
-                $response = MootapayRepository::transaction($mootapay_data);
-    
-                // insert response mootapay to payment table
-                if($response->successful()) {
-                    $payment->update([
-                        'mootapay_response' => json_decode($response),
-                        'expired_time' => Carbon::parse($response['data']['expired_date'])
-                    ]);
-                } else {
-                    $response->throw();
-                }
+                $midtrans = new CreateSnapTokenService($order);
+                $snapToken = $midtrans->getSnapToken();
+                $payment->update([ 'snap_token' => $snapToken ]);
     
                 return ResponseFormatter::success(new PaymentResource($payment), 'success triger second payment po data');
             });

@@ -19,12 +19,13 @@ class CreatePaymentsTable extends Migration
             $table->foreignId('transaction_id')->nullable()->constrained('transactions')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('parent_id')->nullable()->constrained('payments')->onUpdate('cascade');
             $table->integer('unique_code')->nullable();
-            $table->bigInteger('total');
+            $table->decimal('total', 16, 2);
             $table->dateTime('expired_time')->nullable();
             $table->dateTime('paid_off_time')->nullable();
             $table->integer('order_payment');
             $table->enum('status', ['pending', 'process', 'paid_off', 'expired', 'canceled']);
-            $table->json('mootapay_response')->nullable();
+            $table->string('snap_token', 36)->nullable();
+            $table->json('midtrans_notification')->nullable();
             $table->timestamps();
         });
     }
