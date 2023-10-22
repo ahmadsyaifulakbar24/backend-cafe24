@@ -37,7 +37,7 @@ class PaymentResource extends JsonResource
             'no_rek' => $transaction->no_rek,
             'transaction_id' => $this->transaction_id,
             'unique_code' => $this->unique_code,
-            'total' => $this->total,
+            'total' => intval($this->total),
             'expired_time' => $this->expired_time,
             'paid_off_time' => $this->paid_off_time,
             'order_payment' => $this->order_payment,
