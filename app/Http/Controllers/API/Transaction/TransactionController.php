@@ -327,7 +327,7 @@ class TransactionController extends Controller
         $callback = new CallbackService;
         if($callback->isSignatureKeyVerified()) {
             $order = $callback->getOrder();
-            $status = '';
+            $status = 'process';
             if ($callback->isSuccess()) {
                 $status = 'paid_off';
             }
