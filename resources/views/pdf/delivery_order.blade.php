@@ -118,6 +118,6 @@
     <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">***Thank You***</p>
     <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">{{ \Carbon\Carbon::parse($transaction->created_at)->format('d/m/Y H:i:s') }}</p>
     <br>
-    <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">[{{ $transaction->bank_name }} - {{ $transaction->no_rek }}]</p>
+    {{-- <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">[{{ $transaction->bank_name }} - {{ $transaction->no_rek }}]</p> --}}
 </body>
 </html>

@@ -60,9 +60,12 @@ class ResetPasswordController extends Controller
             $token = Crypt::decryptString($request->token);
             $cek_token = DB::table('password_resets')->where('token', $token)->first();
             if(!$cek_token) {
-                return ResponseFormatter::error([
-                    'message' => 'invalid token !'
-                ], 'reset password failed', 422);
+                return response()->json([
+                    'message' => 'reset password failed',
+                    'errors' => [
+                        'token' => [ 'invalid token !' ]
+                    ]
+                ], 422);
             }
     
             $user = User::where('email', $cek_token->email)->first();
@@ -73,9 +76,12 @@ class ResetPasswordController extends Controller
             return ResponseFormatter::success(new UserResource($user), 'success reset password data');
             
         } catch (Exception $e) {
-            return ResponseFormatter::error([
-                'message' => 'invalid token !'
-            ], 'reset password failed', 422);
+            return response()->json([
+                'message' => 'reset password failed',
+                'errors' => [
+                    'token' => [ 'invalid token !' ]
+                ]
+            ], 422);
         }
     }
 
