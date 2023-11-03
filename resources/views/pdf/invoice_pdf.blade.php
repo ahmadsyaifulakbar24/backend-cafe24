@@ -64,7 +64,7 @@
         }
         .container-right {
             float: right;
-            width: 200px;
+            width: 300px;
             padding: 5px 0px;
         }
         .value-right {
@@ -109,18 +109,23 @@
         @php
             $no = 1;
             $total_price = 0;
+            $total_discount_price=0;
         @endphp
         @foreach ( $transaction->transaction_product as $product)
         @php
             $price = $product->price * $product->quantity;
+            $discount_price = ($product->discount_product +  $product->discount_group + $product->discount_customer) * $product->quantity;
+            $discount_percent = $discount_price / $price * 100;
+
             $total_price += $price;
+            $total_discount_price += $discount_price;
         @endphp
             <tr>
                 <td class="no">{{ $no++ }}</td>
-                <td class="banyaknya">{{ $product->quantity }}</td>
+                <td class="banyaknya">{{ numberFormat($product->quantity) }}</td>
                 <td class="nama-item">{{ $product->product_name }}</td>
-                <td class="harga">{{ $product->price }} <br> <span class="discount-text">disc 10%</span></td>
-                <td>{{ $price }} <br> <span class="discount-text">(63.000)</span></td>
+                <td class="harga">{{ numberFormat($product->price) }} <br> <span class="discount-text">disc {{ $discount_percent }}%</span></td>
+                <td>{{ numberFormat($price) }} <br> <span class="discount-text">({{ numberFormat($discount_price) }})</span></td>
             </tr>
         @endforeach
     </table>
@@ -131,7 +136,7 @@
             <span>
                 Total Harga
             </span>
-            <span class="value-right">{{ $total_price }}</span>
+            <span class="value-right">{{ numberFormat($total_price) }}</span>
         </div>
         <div class="clearfix"></div>
 
@@ -139,39 +144,38 @@
             <span>
                 Total Disc
             </span>
-            <span class="value-right">(174.000)</span>
+            <span class="value-right">({{ numberFormat($total_discount_price) }})</span>
         </div>
     </div>
     <div class="clearfix"></div>
     <div style="margin-top: 10px;" class="line"></div>
     <div>
         <div class="left">
-            <p style="font-size: 1.1rem; margin-top: 0px; margin-bottom: 0px">Total qty: {{ $transaction->transaction_product()->sum('quantity') }}</p>
+            <p style="font-size: 1.1rem; margin-top: 0px; margin-bottom: 0px">Total qty: {{ numberFormat($transaction->transaction_product()->sum('quantity')) }}</p>
         </div>
         <div class="container-right">
             <span>SUB TOTAL</span>
-            <span class="value-right">1.566.000</span>
+            <span class="value-right">{{ numberFormat($total_price - $total_discount_price) }}</span>
         </div>
         <div class="clearfix"></div>
         <div class="container-right">
-            <span>DISKON</span>
-            <span class="value-right">(6.000)</span>
+            <span>ONGKOS KIRIM</span>
+            <span class="value-right">({{ numberFormat($transaction->shipping_cost) }})</span>
+        </div>
+        <div class="clearfix"></div>
+        <div class="container-right">
+            <span>DISKON ONGKOS KIRIM</span>
+            <span class="value-right">({{ numberFormat($transaction->shipping_discount) }})</span>
         </div>
         <div class="clearfix"></div>
         <div class="container-right">
             <span>TOTAL</span>
-            <span class="value-right">1.560.000</span>
+            @php
+                $grand_total = $total_price - $total_discount_price + $transaction->shipping_cost - $transaction->shipping_discount;
+            @endphp
+            <span class="value-right">{{ numberFormat($grand_total) }}</span>
         </div>
         <div class="clearfix"></div>
-        <div class="container-right">
-            <span>BAYAR</span>
-            <span class="value-right">0</span>
-        </div>
-        <div class="clearfix"></div>
-        <div class="container-right">
-            <span>SISA</span>
-            <span class="value-right">1.560.000</span>
-        </div>
     </div>
     <div class="clearfix"></div>
     <div>
@@ -190,6 +194,6 @@
     <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">***Thank You***</p>
     <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">{{ \Carbon\Carbon::parse($transaction->created_at)->format('d/m/Y H:i:s') }}</p>
     <br>
-    <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">[{{ $transaction->bank_name }} - {{ $transaction->no_rek }}]</p>
+    {{-- <p style="font-size: 1.1rem; text-align: center; margin-top: -20px;">[{{ $transaction->bank_name }} - {{ $transaction->no_rek }}]</p> --}}
 </body>
 </html>
