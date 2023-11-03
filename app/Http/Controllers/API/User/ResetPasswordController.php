@@ -55,21 +55,28 @@ class ResetPasswordController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)],
             'password_confirmation' => ['required', Password::min(8)]
         ]);
-
-        $token = Crypt::decryptString($request->token);
-        $cek_token = DB::table('password_resets')->where('token', $token)->first();
-        if(!$cek_token) {
+        
+        try {
+            $token = Crypt::decryptString($request->token);
+            $cek_token = DB::table('password_resets')->where('token', $token)->first();
+            if(!$cek_token) {
+                return ResponseFormatter::error([
+                    'message' => 'invalid token !'
+                ], 'reset password failed', 422);
+            }
+    
+            $user = User::where('email', $cek_token->email)->first();
+            $user->update([
+                'password' => Hash::make($request->password)
+            ]);
+            DB::table('password_resets')->where('email', $cek_token->email)->delete();
+            return ResponseFormatter::success(new UserResource($user), 'success reset password data');
+            
+        } catch (Exception $e) {
             return ResponseFormatter::error([
                 'message' => 'invalid token !'
             ], 'reset password failed', 422);
         }
-
-        $user = User::where('email', $cek_token->email)->first();
-        $user->update([
-            'password' => Hash::make($request->password)
-        ]);
-        DB::table('password_resets')->where('email', $cek_token->email)->delete();
-        return ResponseFormatter::success(new UserResource($user), 'success reset password data');
     }
 
     public function without_confirmation(Request $request)

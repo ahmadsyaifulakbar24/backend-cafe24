@@ -30,17 +30,25 @@
             font-weight: 900;
             font-size: 15px;
         }
+
+        .wrap-text {
+            word-wrap: break-word;
+        }
+
+        .cursor {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <p>Hi {!! $name !!}</p>
         <p>Kami menerima permohonan atur ulang kata sandi akun Anda. Untuk menyelesaikan proses pergantian kata sandi, mohon menggunakan tombol dibwah ini</p>
-        <a href="{{ $url.'/'.$token }}">
+        <a class="cursor" href="{{ $url.'/'.$token }}">
             <button class="button-send-mail">Reset Password</button>
         </a>
         <p>atau dapat copy link dibawah ini :</p>
-        <div>{{ $url.'/'.$token }}</div>
+        <div class="wrap-text">{{ $url.'/'.$token }}</div>
     </div>
 </body>
 </html>
